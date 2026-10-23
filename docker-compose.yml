@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Сервер баз данных
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: my_company_db
+      POSTGRES_USER: db_user
+      POSTGRES_PASSWORD: db_password
+    ports:
+      - "5432:5432"  # Проброс порта наружу! DBeaver будет подключаться к localhost:5432
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d # Авто-запуск init.sql при создании
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Веб-приложение Flask
+  web:
+    build: .
+    container_name: flask_web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_ENV=development
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
